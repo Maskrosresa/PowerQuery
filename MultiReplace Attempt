@@ -1,9 +1,9 @@
 let
     // 1. Point to your MAIN data table (the one with 'covcountry')
-    Source = MainData, // <-- MAKE SURE this matches the name of your main data query
+    Source = GDC_load, // <-- MAKE SURE this matches the name of your main data query
 
     // 2. Point to your REPLACEMENT table (your 'geoCov' table)
-    ReplacementTable = GeoCovTable, // <-- MAKE SURE this matches the name of your geoCov query
+    ReplacementTable = geoCov, // <-- MAKE SURE this matches the name of your geoCov query
 
     // --- No more changes needed below this line ---
 
