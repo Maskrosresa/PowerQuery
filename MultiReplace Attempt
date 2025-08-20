@@ -1,21 +1,20 @@
 let
-    // 1. Point to your MAIN data table (the one with 'covcountry')
-    Source = GDC_load, // <-- MAKE SURE this matches the name of your main data query
+    // 1. Point to your MAIN data table
+    Source = GDC_load,
 
-    // 2. Point to your REPLACEMENT table (your 'geoCov' table)
-    ReplacementTable = geoCov, // <-- MAKE SURE this matches the name of your geoCov query
+    // 2. Point to your REPLACEMENT table
+    ReplacementTable = geoCov,
 
     // --- No more changes needed below this line ---
 
     // Convert the replacement table into a list for processing
-    // List.Buffer is used for a significant performance boost
     ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
 
-    // Get the names of only the text columns from your main table
-    Schema = Table.Schema(Source),
-    ColumnsToLookIn = Table.SelectRows(Schema, each ([TypeName] = "Text.Type"))[Name],
+    // Tell the query to look ONLY in the "covcountry" column
+    // This is the line we changed to be specific
+    ColumnsToLookIn = {"covcountry"},
 
-    // Perform the replacements on all text columns
+    // Perform the replacements on the specified column(s)
     ReplaceValues = Table.TransformColumns(
         Source,
         List.Transform(
