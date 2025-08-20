@@ -11,4 +11,23 @@ let
     ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
     ColumnsToLookIn = {"covcountry"},
 
-    // ... The rest of your code remains the same
+    ReplaceValues = Table.TransformColumns(
+        Source,
+        List.Transform(
+            ColumnsToLookIn,
+            each {_,
+                (textValue) =>
+                    // ADD THIS LINE to check for nulls first
+                    if textValue = null then null else
+                    
+                    // The original replacement logic now runs only on non-null values
+                    List.Accumulate(
+                        ReplacementList,
+                        textValue,
+                        (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
+                    )
+            }
+        )
+    )
+in
+    ReplaceValues
