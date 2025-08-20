@@ -1,0 +1,41 @@
+let
+    // Overview: Replace partial matches in multiple columns based on tblReplacements table while excluding non-text columns.
+    // Developed by: [Wyn]
+
+    // Load the tblData table
+    Source = tblSourceData,
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Item", type text}, {"Item 2", type text}}),
+
+    // Convert the tblReplacements table into a list of replacement pairs (find and replace values)
+    ReplacementList = Table.ToRows(tblReplacements),
+
+   // Buffer the ReplacementList for performance improvement
+    BufferedReplacementList = List.Buffer(ReplacementList),
+
+    // Get the column names of text type only
+    //ColumnsToLookIn =  {"Item"},  // could be entred like this to pick a single column
+    Schema = Table.Schema(#"Changed Type"),
+    ColumnsToLookIn =  Table.SelectRows(Schema, each ([TypeName] = "Text.Type"))[Name],
+  
+
+
+    // Apply replacements to specified text columns
+    ReplaceValues = Table.TransformColumns(
+        #"Changed Type", // Initial table
+        List.Transform( ColumnsToLookIn, // Transform the list of columns
+            each 
+                {_, // Column name passed from the list ColumnsToLookIn
+
+                    // Function to apply to each text value in the current column
+                    (textValue) => 
+                        List.Accumulate(
+                            BufferedReplacementList, // Buffered list for performance
+                            textValue, // Initial text value in the column
+                            (currentText, replacementPair) => 
+                                Text.Replace(currentText, replacementPair{0}, replacementPair{1}) // Replace occurrences
+                        )
+                }
+        )
+    )
+in
+    ReplaceValues
