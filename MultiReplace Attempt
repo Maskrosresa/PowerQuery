@@ -2,31 +2,13 @@ let
     // 1. Point to your MAIN data table
     Source = GDC_load,
 
-    // 2. Point to your REPLACEMENT table
-    ReplacementTable = geoCov,
+    // 2. Point to your REPLACEMENT table and filter out nulls
+    ReplacementTableSource = geoCov,
+    ReplacementTable = Table.SelectRows(ReplacementTableSource, each [YourFindColumnName] <> null),
 
     // --- No more changes needed below this line ---
 
     ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
     ColumnsToLookIn = {"covcountry"},
 
-    ReplaceValues = Table.TransformColumns(
-        Source,
-        List.Transform(
-            ColumnsToLookIn,
-            each {_,
-                (textValue) =>
-                    // ADD THIS LINE to check for nulls first
-                    if textValue = null then null else
-                    
-                    // The original replacement logic now runs only on non-null values
-                    List.Accumulate(
-                        ReplacementList,
-                        textValue,
-                        (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
-                    )
-            }
-        )
-    )
-in
-    ReplaceValues
+    // ... The rest of your code remains the same
