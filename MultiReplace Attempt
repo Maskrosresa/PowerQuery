@@ -1,0 +1,33 @@
+let
+    // 1. Point to your MAIN data table (the one with 'covcountry')
+    Source = MainData, // <-- MAKE SURE this matches the name of your main data query
+
+    // 2. Point to your REPLACEMENT table (your 'geoCov' table)
+    ReplacementTable = GeoCovTable, // <-- MAKE SURE this matches the name of your geoCov query
+
+    // --- No more changes needed below this line ---
+
+    // Convert the replacement table into a list for processing
+    // List.Buffer is used for a significant performance boost
+    ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
+
+    // Get the names of only the text columns from your main table
+    Schema = Table.Schema(Source),
+    ColumnsToLookIn = Table.SelectRows(Schema, each ([TypeName] = "Text.Type"))[Name],
+
+    // Perform the replacements on all text columns
+    ReplaceValues = Table.TransformColumns(
+        Source,
+        List.Transform(
+            ColumnsToLookIn,
+            each {_,
+                (textValue) => List.Accumulate(
+                    ReplacementList,
+                    textValue,
+                    (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
+                )
+            }
+        )
+    )
+in
+    ReplaceValues
