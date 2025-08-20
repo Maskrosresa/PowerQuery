@@ -1,33 +1,22 @@
 let
-    // 1. Point to your MAIN data table
-    Source = GDC_load,
+    // 1. Point to your MAIN data table (the one with 'covcountry')
+    Source = GDC_load, // <-- MAKE SURE this matches the name of your main data query
 
-    // 2. Point to your REPLACEMENT table and filter out nulls
-    ReplacementTableSource = geoCov,
-    ReplacementTable = Table.SelectRows(ReplacementTableSource, each [YourFindColumnName] <> null),
+    // 2. Point to your REPLACEMENT table (your 'geoCov' table)
+    ReplacementTable = geoCov, // <-- MAKE SURE this matches the name of your geoCov query
 
-    // --- No more changes needed below this line ---
-
+    // Convert the replacement table into a list of rows for faster processing
     ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
-    ColumnsToLookIn = {"covcountry"},
 
-    ReplaceValues = Table.TransformColumns(
-        Source,
-        List.Transform(
-            ColumnsToLookIn,
-            each {_,
-                (textValue) =>
-                    // ADD THIS LINE to check for nulls first
-                    if textValue = null then null else
-                    
-                    // The original replacement logic now runs only on non-null values
-                    List.Accumulate(
-                        ReplacementList,
-                        textValue,
-                        (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
-                    )
-            }
-        )
-    )
+    // Perform the replacements on ONLY the 'covcountry' column
+    ReplaceValues = Table.TransformColumns(Source, {
+        "covcountry", // <-- Specifies the exact column to change
+        (cellValue) => List.Accumulate(
+            ReplacementList,
+            cellValue,
+            (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
+        ),
+        type text
+    })
 in
     ReplaceValues
