@@ -7,24 +7,24 @@ let
 
     // --- No more changes needed below this line ---
 
-    // Convert the replacement table into a list for processing
     ReplacementList = List.Buffer(Table.ToRows(ReplacementTable)),
-
-    // Tell the query to look ONLY in the "covcountry" column
-    // This is the line we changed to be specific
     ColumnsToLookIn = {"covcountry"},
 
-    // Perform the replacements on the specified column(s)
     ReplaceValues = Table.TransformColumns(
         Source,
         List.Transform(
             ColumnsToLookIn,
             each {_,
-                (textValue) => List.Accumulate(
-                    ReplacementList,
-                    textValue,
-                    (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
-                )
+                (textValue) =>
+                    // ADD THIS LINE to check for nulls first
+                    if textValue = null then null else
+                    
+                    // The original replacement logic now runs only on non-null values
+                    List.Accumulate(
+                        ReplacementList,
+                        textValue,
+                        (currentText, replacementPair) => Text.Replace(currentText, replacementPair{0}, replacementPair{1})
+                    )
             }
         )
     )
